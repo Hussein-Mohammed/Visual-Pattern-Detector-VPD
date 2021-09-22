@@ -1,0 +1,167 @@
+﻿@page
+@model VPD1p3.Pages.Data.AddImagesModel
+@inject VPD1p3.MyLibrary.GlobalVariables GV
+@inject VPD1p3.MyLibrary.TempVariables_Patterns_Singleton Temp
+@using System.IO
+@using Microsoft.AspNetCore.Hosting;
+@inject IWebHostEnvironment hostingEnvironment
+@{
+    ViewData["Title"] = "Add Images to be Searched";
+}
+
+<h3 style="text-align:center; font-style:italic">@ViewData["Title"]</h3>
+<hr />
+
+<div class="row">
+    <div class="col-12 my-auto">
+        <div id="confirmationmsg" class="alert alert-info" style="text-align: center; font-size: small"> Current files: @Temp.TempImgInfo.NumberOfFiles</div>
+    
+        <h6 style="text-align:center;">@ViewData["confirmation"]</h6>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 my-auto">
+
+        <form id="form" name="form" enctype="multipart/form-data" method="post">
+            <h5 style="font-size:x-large;color:green;text-align:center">1 </h5>
+            <div style="text-align:center">
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('files').click()">Upload</button>
+            </div>
+            <input id="files" name="files" type="file" size="1" multiple onchange="uploadFiles('files')" style="display:none;" />
+        </form>
+
+        <br />
+        <p style="text-align: center; font-size: smaller"> Accepted extensions are: ".jpeg", ".jpg", ".tiff", ".tif", ".png" and ".bmp"</p>
+
+
+    </div>
+</div>
+<hr />
+<div class=" row">
+    <div class="col-4 my-auto"></div>
+    <div class="col-4 my-auto">
+
+        <div>
+            <form method="post" asp-page-handler="AddDataFiles">
+                <div>
+                    <h5 style="font-size: x-large;color: green;text-align: center">2 </h5>
+                    <div style="text-align:center">
+                        <button class="btn btn-primary" asp-page-handler="AddDataFiles">Add Images</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<hr />
+@{
+    if (GV.Patterns != null && GV.Images.FileNames.Count() > 0)
+    {
+    <h3 style="text-align:center"><a asp-page="/Detection/Settings">Set Detection Parameters</a> </h3>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th style="text-align:center">
+                        Image Name
+                    </th>
+                    <th style="text-align:center">
+                        Number of Uploaded Images
+                    </th>
+                </tr>
+            </thead>
+
+            <tr>
+                <th style="text-align:center">
+                    <button type="button" class="collapsible" style="text-align:center">Data Images</button>
+                    <div class="content">
+
+                        @foreach (var FileName in GV.Images.FileNames)
+                        {
+                            //string FullPath = System.IO.Path.Combine(Styles.FilePath, img);
+                            <p style="text-align:center">@FileName</p>
+                        }
+                    </div>
+                </th>
+                <th style="text-align:center">
+                    @Html.DisplayFor(model => GV.Images.NumberOfFiles)
+                </th>
+                <th style="text-align:center">
+                    <form method="post" asp-page-handler="DeletePN">
+                        <button class="btn btn-default" asp-page-handler="DeletePN">Delete</button>
+                        <input type="hidden" name="PN" value="DataImages" />
+                    </form>
+                </th>
+            </tr>
+
+        </table>
+
+        <h3 style="text-align:center"><a asp-page="/Detection/Settings">Set Detection Parameters</a> </h3>
+    }
+    else
+    {
+        <h4 style="color:crimson"> No files uploaded yet! </h4>
+    }
+
+}
+<hr />
+
+@section Scripts {
+    <script type="text/javascript" language="JavaScript">
+        function uploadFiles(inputId) {
+            var input = document.getElementById(inputId);
+            var files = input.files;
+            var formData = new FormData();
+
+            for (var i = 0; i != files.length; i++) {
+                formData.append("files", files[i]);
+            }
+
+            if (files.length > 0) {
+                $.ajax(
+                    {
+                        type: "POST",
+                        url: "/Data/AddImages?handler=Upload",
+
+                        beforeSend: function (xhr) {
+                            $('#confirmationmsg').text(files.length + " files uploaded.");
+
+                            xhr.setRequestHeader("XSRF-TOKEN",
+                                $('input:hidden[name="__RequestVerificationToken"]').val());
+                        },
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function (data) {
+                            $('#confirmationmsg').text(files.length + " files uploaded");
+                        }
+                    }
+                );
+            }
+            else {
+                alert('Please select image(s)')
+            }
+        }
+    </script>
+}
+
+
+<hr />
+<div style="border-style:solid; border-color:blue; border-width:medium; border-radius:10px; padding:3px">
+    <h3 style="text-align:center">Instructions:</h3>
+    <p style="text-align:center">
+        The procedure sequence of adding data images is indicated by the numbers above each step.
+    </p>
+    <ol>
+        <li>
+            You can keep adding files from different folders as many times as you want. The number of valid 
+            uploaded files will change accordingly.
+        </li>
+
+        <li>
+            You can delete the added images by clicking the "Delete" button.
+        </li>
+    </ol>
+
+</div>

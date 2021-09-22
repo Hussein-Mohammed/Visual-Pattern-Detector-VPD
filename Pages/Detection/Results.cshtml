@@ -1,0 +1,317 @@
+﻿@page
+@model VPD1p3.Pages.Detection.ResultsModel
+@inject VPD1p3.MyLibrary.GlobalVariables GV
+@using System.IO
+@using Microsoft.AspNetCore.Hosting;
+@inject IWebHostEnvironment hostingEnvironment
+@{
+}
+
+@{
+    if (ViewData["JobId"] == null)
+        ViewData["JobId"] = Guid.NewGuid().ToString("N");
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <form asp-page-handler="DrawDetections">
+            <button class="btn btn-primary" id="DrawButton" onclick="ChangeText()" style="position:center; display:block; margin-left:auto; margin-right:auto; font-size:x-large">Apply Changes</button>
+        </form>
+    </div>
+</div>
+<h4 style="text-align:center">Drawing Progress: <strong><span id="draw-status">Waiting to start... </span></strong></h4>
+<hr />
+<br />
+
+@{
+    if (GV.Patterns != null && GV.Patterns.Count() > 0)
+    {
+        @foreach (var Pattern in GV.Patterns)
+        {
+            <div class="row">
+                <div class="col-3 my-auto"></div>
+
+                <div class="col-3 my-auto">
+                    <h3 style="text-align:center; font-style:italic">Pattern: @Pattern.PatternName</h3>
+                </div>
+
+                @{
+                    string webRootPath = hostingEnvironment.WebRootPath;
+                    string Patterns = "Patterns";
+                    string Patterns_Path = System.IO.Path.Combine(webRootPath, Patterns);
+                    string CurrentPattern_Path = System.IO.Path.Combine(Patterns_Path, Pattern.PatternName);
+
+                    var Pattern_Images = Directory.EnumerateFiles(CurrentPattern_Path, "*.*", SearchOption.AllDirectories).Where(s => s.ToLower().EndsWith(".jpeg") ||
+                    s.ToLower().EndsWith(".jpg") || s.ToLower().EndsWith(".tif") || s.ToLower().EndsWith(".tiff") || s.ToLower().EndsWith(".png")
+                    || s.ToLower().EndsWith(".bmp"));
+
+                    <div class="col-3 my-auto">
+                        <img id="myImg" src="@Url.Content("~/Patterns/" + Pattern.PatternName + "/" + System.IO.Path.GetFileName(Pattern_Images.ToList()[0]))" class="img-responsive" style="max-width:90%" />
+                    </div>
+                }
+            </div>
+            <br />
+
+            <div class="row">
+                <div class="col-6 my-auto" style="text-align:center">
+                    <h5 style="text-align:center"> Number of Considered Detections </h5>
+                    <form method="post" asp-page-handler="SelectTopN">
+                        @*<div style="text-align:center" id="valBox">@GV.TopN_PerClass[Pattern.Label]</div>*@
+
+                        <input type="number" name="TopN" style="text-align:center;margin-bottom:5px" min="1" max="@GV.DetectionsPerPattern[Pattern.Label].Count()" step="1" oninput="showVal(this.value)" onchange="" value="@GV.TopN_PerClass[Pattern.Label]">
+                        <input type="hidden" name="PL" value="@Pattern.Label" />
+                        <br />
+                        <button type="submit" style="text-align:center;margin-bottom:5px">Change</button>
+                    </form>
+                </div>
+                <div class="col-3 my-auto">
+                    <h5>Total Detections: @GV.DetectionsPerPattern[Pattern.Label].Count()</h5>
+                </div>
+                <div class="col-3 my-auto">
+                    @{
+                        int ConsideredDetections;
+                        if (GV.DetectionsPerPattern[Pattern.Label].Count() <= 0)
+                            ConsideredDetections = 0;
+                        else
+                            ConsideredDetections = GV.TopN_PerClass[Pattern.Label];
+                    }
+                    <h5>Considered Detections: @ConsideredDetections</h5>
+                </div>
+            </div>
+            <br />
+            <div class="row" id="Best">
+                <div class="col-3 my-auto">
+                    <h4 style="text-align:center">Best Detections:</h4>
+                </div>
+                @{
+                    string Detections = "Detections";
+                    string Detections_Path = System.IO.Path.Combine(webRootPath, Detections);
+                    string Pattern_Path = System.IO.Path.Combine(Detections_Path, Pattern.PatternName);
+                    string BestDetections_Path = System.IO.Path.Combine(Pattern_Path, "BestDetections");
+
+                    var BestDetections_Images = Directory.EnumerateFiles(BestDetections_Path, "*.*", SearchOption.AllDirectories).Where(s => s.ToLower().EndsWith(".jpeg") ||
+                    s.ToLower().EndsWith(".jpg") || s.ToLower().EndsWith(".tif") || s.ToLower().EndsWith(".tiff") || s.ToLower().EndsWith(".png")
+                    || s.ToLower().EndsWith(".bmp"));
+
+                    foreach (string Img in BestDetections_Images)
+                    {
+                        <div class="col-3 my-auto">
+                            <img id="myImg" src="@Url.Content("~/Detections/" + Pattern.PatternName + "/BestDetections/" + System.IO.Path.GetFileName(Img))" class="img-responsive" style="max-width:90%" />
+                        </div>
+                    }
+                }
+            </div>
+            <br />
+            <div class="row" id="Worst">
+                <div class="col-3 my-auto">
+                    <h4 style="text-align:center">Worst Detections:</h4>
+                </div>
+
+                @{
+                    string WorstDetections_Path = System.IO.Path.Combine(Pattern_Path, "WorstDetections");
+
+                    var WorstDetections_Images = Directory.EnumerateFiles(WorstDetections_Path, "*.*", SearchOption.AllDirectories).Where(s => s.ToLower().EndsWith(".jpeg") ||
+                    s.ToLower().EndsWith(".jpg") || s.ToLower().EndsWith(".tif") || s.ToLower().EndsWith(".tiff") || s.ToLower().EndsWith(".png")
+                    || s.ToLower().EndsWith(".bmp"));
+
+                    foreach (string Img in WorstDetections_Images)
+                    {
+                        <div class="col-3 my-auto">
+                            <img id="myImg" src="@Url.Content("~/Detections/" + Pattern.PatternName + "/WorstDetections/" + System.IO.Path.GetFileName(Img))" class="img-responsive" style="max-width: 90%" />
+                        </div>
+                    }
+                }
+            </div>
+
+            <br />
+            <div class="row">
+                <div class="col-3 my-auto">
+                    <form method="post" asp-page-handler="DownloadCropped">
+                        <div class="form-group">
+                            <div style="text-align:center">
+                                <button class="btn btn-primary" asp-page-handler="DownloadCropped" style="font-size:large">Cropped Detections</button>
+                                <input type="hidden" name="PN" value="@Pattern.PatternName" />
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-3 my-auto">
+                    <form method="post" asp-page-handler="DownloadFull">
+                        <div class="form-group">
+                            <div style="text-align:center">
+                                <button class="btn btn-primary" asp-page-handler="DownloadFull" style="font-size:large">Full-Image Detections</button>
+                                <input type="hidden" name="PN" value="@Pattern.PatternName" />
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-3 my-auto">
+                    <form method="post" asp-page-handler="DownloadPerImg">
+                        <div class="form-group">
+                            <div style="text-align:center">
+                                <button class="btn btn-primary" asp-page-handler="DownloadPerImg" style="font-size:large">Detections Per Image</button>
+                                <input type="hidden" name="PN" value="@Pattern.PatternName" />
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-3 my-auto">
+                    <form method="post" asp-page-handler="DownloadAllPerPattern">
+                        <div class="form-group">
+                            <div style="text-align:center">
+                                <button class="btn btn-primary" asp-page-handler="DownloadAllPerPattern" style="font-size:large">Download Everything</button>
+                                <input type="hidden" name="PN" value="@Pattern.PatternName" />
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <hr />
+            <br />
+        }
+    }
+
+    <hr />
+
+    <div class="row">
+        <div class="col-6 my-auto">
+            <form method="post" asp-page-handler="DownloadAll">
+                <div class="form-group">
+                    <div style="text-align:center">
+                        <button class="btn btn-primary" asp-page-handler="DownloadAll" style="font-size:large">Download All Detections Per Pattern</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="col-6 my-auto">
+            <form method="post" asp-page-handler="DownloadMultiDet">
+                <div class="form-group">
+                    <div style="text-align:center">
+                        <button class="btn btn-primary" asp-page-handler="DownloadMultiDet" style="font-size:large">Download All Detections Per Image</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+@*<form method="post">
+        <div id="ForReload">
+            <input type="hidden" name="ForReload" value="@GV.Random" id="ForReload" onchange="@Model.OnPostReload()"/>
+        </div>
+    </form>*@
+
+<script>
+    function showVal(newVal) {
+        document.getElementById("valBox").innerHTML = newVal;
+    }
+
+    function ChangeText() {
+        document.getElementById("DrawButton").innerText = "Apply Changes";
+        //location.reload();
+    }
+</script>
+
+<hr />
+
+<form method="post">
+    <div class="text-center">
+        <p> Click the button below if you want to delete all the files from the application, including the results and the uploaded patterns and images.</p>
+        <button class="btn-danger" asp-page-handler="DeleteAll" name="DeleteAll">Delete Everything</button>
+    </div>
+</form>
+
+<hr />
+
+<p> If you want to calculate new results using different settings, please return back to the previous step:</p>
+<h3 style="text-align:center"><a asp-page="/Detection/Settings">Change Detection Parameters</a> </h3>
+
+<hr />
+
+<div style="border-style:solid; border-color:blue; border-width:medium; border-radius:10px; padding:3px">
+    <h3 style="text-align:center">Instructions:</h3>
+    <ol>
+        <li>
+            In this page, you should find the detection results for each selected pattern.
+        </li>
+        <li>
+            You can download the detections of each pattern in several different formats depending on what you need.
+        </li>
+        <li>
+            You can download all detections for all patterns either separated in different folders, or drawn concurrently
+            over the data images.
+        </li>
+        <li>
+            You can change the number of considered detections for any pattern. Once you click "Change", the number of 
+            "Considered Detections" will be updated.
+        </li>
+        <li>
+            In order to apply the changes (if any) for all patterns, click "Apply Changes". Once the "Drawing Progress" is "Finished!",
+            you can "Click to Update Results".
+        </li>
+        <li>
+            You can delete everything by clicking the "Delete Everything" button. You will be redirected
+            to the first page automatically, so that you can start a new detection.
+        </li>
+        <li>
+            You can Change the detection parameters and re-run the detection process on the same data by clicking the
+            "Change Detection Parameters" link.
+        </li>
+    </ol>
+
+</div>
+
+@section Scripts
+        {
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
+
+    <script>
+        document.head || (document.head = document.getElementsByTagName('head')[0]);
+
+        var connection = new signalR.HubConnectionBuilder()
+            .withUrl("/jobprogress")
+            .configureLogging(signalR.LogLevel.Information)
+            .build();
+        connection.on("DrawProgress",
+            (percent) => {
+                if (percent === 100) {
+                    changeFavicon("/images/done.png");
+                    document.getElementById("draw-status").innerText = "Finished!";
+
+                    document.getElementById("DrawButton").innerText = "Click to Update Results";
+
+                } else {
+                    changeFavicon("/images/running.png");
+                    document.getElementById("draw-status").innerText = `${percent}%`;
+                }
+            });
+
+            //connection.on("Reload",
+            //    (Random) => {
+            //        if (Random === 1) {
+            //            Random = 0;
+
+            //        }
+
+            //    });
+
+            connection.start()
+                .then(_ => connection.invoke("AssociateJob", "@ViewData["JobId"].ToString()"))
+                .catch(err => console.error(err.toString()));
+
+        //changeFavicon("/images/waiting.png");
+
+        function changeFavicon(src) {
+            var link = document.createElement('link'),
+                oldLink = document.getElementById('dynamic-favicon');
+            link.id = 'dynamic-favicon';
+            link.rel = 'shortcut icon';
+            link.href = src;
+            if (oldLink) {
+                document.head.removeChild(oldLink);
+            }
+            document.head.appendChild(link);
+        }
+    </script>
+}

@@ -1,0 +1,321 @@
+﻿@page
+@model VPD1p3.Pages.Detection.SettingsModel
+@inject VPD1p3.MyLibrary.GlobalVariables GV
+@{
+    ViewData["Title"] = "Set Detector Parameters";
+}
+
+@{
+    if (ViewData["JobId"] == null)
+        ViewData["JobId"] = Guid.NewGuid().ToString("N");
+}
+
+@*Show Progress Counter*@
+<div class="row">
+    <div class="col-12 my-auto">
+        <h4 style="text-align:center">Start the automatic pattern detection:</h4>
+        <form asp-page-handler="StartAnalysis">
+            <button class="btn btn-primary" style="position:center; display:block; margin-left:auto; margin-right:auto; font-size:x-large">Start Detection</button>
+        </form>
+    </div>
+</div>
+<h4 style="text-align:center">Detection Progress: <strong><span id="detect-status">Waiting to start... </span></strong></h4>
+
+<br />
+
+<div class="row">
+    <div class="col-12 my-auto" id="Result" style="display:none">
+        <h3 style="text-align:center; color:greenyellow"><a asp-page="/Detection/Results"> <button class="btn btn-primary" style="font-size:x-large; background-color:green"> Results </button> </a> </h3>
+    </div>
+</div>
+
+@*<h3 style="text-align:center; font-style:italic">@ViewData["Title"]</h3>*@
+<hr />
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="table-bordered">
+            <h3 class="text-center">Patterns </h3>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="text-align:center">
+                            Pattern Name
+                        </th>
+                        <th style="text-align:center">
+                            Number of Uploaded Images
+                        </th>
+                    </tr>
+                </thead>
+                @foreach (var Styles in GV.Patterns)
+                {
+                    <tr>
+                        <th style="text-align:center">
+                            <button type="button" class="collapsible" style="text-align:center">@Styles.PatternName</button>
+                            <div class="content">
+
+                                @foreach (var img in Styles.FileNames)
+                                {
+                                    //string FullPath = System.IO.Path.Combine(Styles.FilePath, img);
+                                    <p style="text-align:center">@img</p>
+                                }
+                            </div>
+                        </th>
+                        <th style="text-align:center">
+                            @Html.DisplayFor(model => Styles.NumberOfFiles)
+                        </th>
+                    </tr>
+                }
+            </table>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="table-bordered">
+            <h3 class="text-center">Data Images </h3>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="text-align:center">
+                            Image Name
+                        </th>
+                        <th style="text-align:center">
+                            Number of Uploaded Images
+                        </th>
+                    </tr>
+                </thead>
+
+                <tr>
+                    <th style="text-align:center">
+                        <button type="button" class="collapsible" style="text-align:center">Data Images</button>
+                        <div class="content">
+
+                            @foreach (var img in GV.Images.FileNames)
+                            {
+                                //string FullPath = System.IO.Path.Combine(Styles.FilePath, img);
+                                <p style="text-align:center">@img</p>
+                            }
+                        </div>
+                    </th>
+                    <th style="text-align:center">
+                        @Html.DisplayFor(model => GV.Images.NumberOfFiles)
+                    </th>
+                </tr>
+
+            </table>
+        </div>
+    </div>
+</div>
+
+<hr />
+<h3 style="text-align:center; font-style:italic; font-size:medium" class="collapsible">Parameter Selection</h3>
+<div class="content">
+    <hr />
+    <div class="row">
+        @*<div class="col-4 my-auto">
+                <h5 style="text-align:center;font-size:medium"> Select Keypoints Detection Algorithm </h5>
+                <form method="post" asp-page-handler="KptSelection">
+                    <select asp-for="SelectedKpt" asp-items="Model.Options_KeyPoints" style="margin-bottom:10px"></select>
+                    <br />
+                    <div style="text-align:center">
+                        <button type="submit" class="btn btn-primary">Apply</button>
+                    </div>
+                </form>
+            </div>*@
+        <div class="col-4 my-auto">
+            <h5 style="text-align:center;font-size:medium"> Choose pattern properties which you want to tolerate </h5>
+            <form method="post" asp-page-handler="Tolerate">
+                <div class="form-group" id="SelectTolerance">
+                    <input name="Scale" type="checkbox" value="true" style="transform:scale(2)">
+                    &nbsp;&nbsp;<label for="Scale"> Scale</label>
+                    <br>
+                    <input name="Rotation" type="checkbox" value="true" style="transform:scale(2)">
+                    &nbsp;&nbsp;<label for="Rotation"> Rotation</label>
+                    <br>
+
+                    <div style="text-align:center">
+                        <button type="submit" class="btn btn-primary">Apply</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="col-4 my-auto">
+            @{
+                if (Model.SelectedKpt == "SIFT")
+                {
+                    <h5 style="text-align:center;font-size:medium"> Select rotation in degrees </h5>
+                    <form method="post" asp-page-handler="Parameter">
+                        <div style="text-align:center" id="valBox">@VPD1p3.Pages.Detection.SettingsModel.SelectedParameter</div>
+                        <input type="range" name="Parameter" min="0" max="45" step="1" oninput="showVal(this.value)" onchange="showVal(this.value)" value="@GV.Selected_Parameter" style="margin-bottom:10px;width:100%">
+                        <br />
+                        <div style="text-align:center">
+                            <button type="submit" class="btn btn-primary">Apply</button>
+                        </div>
+                    </form>
+                }
+                if (Model.SelectedKpt == "FAST")
+                {
+                    <h5 style="text-align:center;font-size:medium"> Select percentage of keypoints </h5>
+                    <form method="post" asp-page-handler="Parameter">
+                        <div style="text-align:center" id="valBox">@VPD1p3.Pages.Detection.SettingsModel.SelectedParameter</div>
+                        <input type="range" name="Parameter" min="0.1" max="20" step="0.1" oninput="showVal(this.value)" onchange="showVal(this.value)" value="@GV.Selected_Parameter" style="margin-bottom:10px;width:100%">
+                        <br />
+                        <div style="text-align:center">
+                            <button type="submit" class="btn btn-primary">Apply</button>
+                        </div>
+                    </form>
+                }
+            }
+        </div>
+        <div class="col-4 my-auto">
+            <form method="post" asp-page-handler="SetKSize">
+                <div class="form-group" id="KSize">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <label for="KSize" style="font-size:medium">Kernal size (in percent):</label>
+                        </div>
+                        <div class="col-sm-6">
+                            <input type="number" class="form-control" name="KSize" min="5" max="60" step="5" value="@(Math.Round(GV.KernelSize_Perc * 100,0))">
+
+                        </div>
+                    </div>
+                    <br />
+                    <div style="text-align:center">
+                        <button type="submit" class="btn btn-primary">Apply</button>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<hr />
+
+<div class="row">
+    <div class="col-6 my-auto">
+        <h4>Current Detection Parameters:</h4>
+    </div>
+    <div class="col-md-6">
+        <div class="row">
+            <h5 style="padding-right:5px">Percentage of keypoints: </h5> <h5 style="color:dodgerblue">@VPD1p3.Pages.Detection.SettingsModel.SelectedParameter %</h5>
+        </div>
+        <div class="row">
+            <h5 style="padding-right:5px">Kernel Size: </h5> <h5 style="color:dodgerblue">@(Math.Round(GV.KernelSize_Perc * 100,0)) %</h5>
+        </div>
+        <div class="row">
+            @{
+                if (GV.Scale)
+                {
+                    <h5 style="padding-right:5px">Scale tolerance: </h5> <h5 style="color:dodgerblue">Enabled</h5>
+                }
+                else
+                {
+                    <h5 style="padding-right:5px">Scale tolerance: </h5> <h5 style="color:dodgerblue">Disabled</h5>
+                }
+            }
+        </div>
+        <div class="row">
+            @{
+                if (GV.Rotation)
+                {
+                    <h5 style="padding-right:5px">Rotation tolerance: </h5> <h5 style="color:dodgerblue">Enabled</h5>
+                }
+                else
+                {
+                    <h5 style="padding-right:5px">Rotation tolerance: </h5> <h5 style="color:dodgerblue">Disabled</h5>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<hr />
+
+<script>
+    function showVal(newVal) {
+        document.getElementById("valBox").innerHTML = newVal;
+    }
+</script>
+
+<hr />
+<div style="border-style:solid; border-color:blue; border-width:medium; border-radius:10px; padding:3px">
+    <h3 style="text-align:center">Instructions:</h3>
+    <ol>
+        <li>
+            You can check the added patterns and data images before starting the detection.
+        </li>
+        <li>
+            The default parameters should be suitable for most cases; nevertheless, you can change
+            them by clicking on "Parameter Selection". Do not forget to click the corresponding "Apply" button
+            after each change. The "Current Detection Parameters" will be updated automatically.
+        </li>
+        <li>
+            If you expect the rotation or the scale of some pattern instanses in your data images to be 
+            different than the rotation or the scale of the provided pattern example, then you can enable the 
+            corresponding parameter by checking it's box and clicking "Apply".
+        </li>
+        <li>
+            Click the "Start Detection" button to start the Detection.
+        </li>
+        <li>
+            The used memory space by detection is mostly determined by the number of different patterns to be detected concurrently.
+        </li>
+        <li>
+            The detection time is mostly determined by the number of data images to be searched and the size of these images.
+        </li>
+        <li>
+            A green button will apear once the results are ready. Click this green "Results" button to go to
+            the results page.
+        </li>
+    </ol>
+
+</div>
+
+@section Scripts
+{
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
+    <script>
+        document.head || (document.head = document.getElementsByTagName('head')[0]);
+
+        var connection = new signalR.HubConnectionBuilder()
+            .withUrl("/jobprogress")
+            .configureLogging(signalR.LogLevel.Information)
+            .build();
+        connection.on("DetectProgress",
+            (percent) => {
+                if (percent === 100) {
+                    changeFavicon("/images/done.png");
+                    document.getElementById("detect-status").innerText = "Finished!";
+                    document.getElementById("Result").style.display = "inline";
+                }
+                if (percent === 123)
+                {
+                    changeFavicon("/images/done.png");
+                    document.getElementById("detect-status").innerText = "Terminated! Number of detected features is less than 3.";
+                }
+                else {
+                    changeFavicon("/images/running.png");
+                    document.getElementById("detect-status").innerText = `${percent}%`;
+                }
+            });
+
+            connection.start()
+                .then(_ => connection.invoke("AssociateJob", "@ViewData["JobId"].ToString()"))
+                .catch(err => console.error(err.toString()));
+
+        //changeFavicon("/images/waiting.png");
+
+        function changeFavicon(src) {
+            var link = document.createElement('link'),
+                oldLink = document.getElementById('dynamic-favicon');
+            link.id = 'dynamic-favicon';
+            link.rel = 'shortcut icon';
+            link.href = src;
+            if (oldLink) {
+                document.head.removeChild(oldLink);
+            }
+            document.head.appendChild(link);
+        }
+    </script>
+
+}
+

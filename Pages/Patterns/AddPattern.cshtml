@@ -1,0 +1,235 @@
+﻿@page
+@model VPD1p3.Pages.Patterns.AddPatternModel
+@inject VPD1p3.MyLibrary.GlobalVariables GV
+@inject VPD1p3.MyLibrary.TempVariables_Patterns_Singleton Temp
+@using System.IO
+@using Microsoft.AspNetCore.Hosting;
+@inject IWebHostEnvironment hostingEnvironment
+@{
+    ViewData["Uploaded"] = "Add Pattern Images to be Detected";
+}
+
+<h3 style="text-align:center; font-style:italic">@ViewData["Title"]</h3>
+
+<hr />
+
+<div class="row">
+    <div class="col-3 my-auto">
+        <div id="confirmationmsg" class="alert alert-info" style="font-size:small"> Current files: @Temp.TempImgInfo.NumberOfFiles</div>
+    </div>
+    <div class="col-9 my-auto">
+        <h6 style="text-align:center;">@ViewData["confirmation"]</h6>
+    </div>
+</div>
+<div class="row">
+    <div class="col-3 my-auto">
+
+        <form id="form" name="form" enctype="multipart/form-data" method="post">
+            <h5 style="font-size:x-large;color:green;text-align:center">1 </h5>
+            <div style="text-align:center">
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('files').click()">Upload</button>
+            </div>
+            <input id="files" name="files" type="file" size="1" multiple onchange="uploadFiles('files')" style="display:none;" />
+        </form>
+
+        <br />
+        <p style="font-size:smaller"> Accepted extensions are: ".jpeg", ".jpg", ".tiff", ".tif", ".png" and ".bmp"</p>
+
+
+    </div>
+    <div class="col-9 my-auto">
+        <form method="post" asp-page-handler="PatternName">
+            <div class="form-group" id="PName_Post">
+                <div class="row">
+                    <div class="col-3 my-auto" style="text-align:center">
+                        <h5 style="font-size:x-large;color:green;text-align:center"> </h5>
+                        <br /><label for="PName_Post" style="font-size:medium">Pattern Name:</label>
+                    </div>
+                    <div class="col-4 my-auto" style="text-align:center">
+                        <br />
+                        <h5 style="font-size:x-large;color:green;text-align:center"> </h5>
+                        <input type="text" class="form-control" name="PName_Post" value="Pattern_@(GV.Patterns.Count() + 1)">
+                    </div>
+                    <div class="col-2 my-auto" style="text-align:center">
+                        <h5 style="font-size: x-large;color: green;text-align: center">2 </h5>
+                        <div style="text-align:center">
+                            <button type="submit" class="btn btn-primary"> Assign </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<hr />
+<div class=" row">
+    <div class="col-4 my-auto"></div>
+    <div class="col-4 my-auto">
+
+        <div>
+            <form method="post" asp-page-handler="AddPatternFiles">
+                <div>
+                    <h5 style="font-size: x-large;color: green;text-align: center">3 </h5>
+                    <div style="text-align:center">
+                        <button class="btn btn-primary" asp-page-handler="AddPatternFiles">Add Pattern</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<hr />
+@{
+    if (GV.Patterns != null && GV.Patterns.Count() > 0)
+    {
+        <h3 style="text-align:center"><a asp-page="/Data/AddImages">Next: Adding Data Images</a> </h3>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th style="text-align:center">
+                        Pattern Name
+                    </th>
+                    <th style="text-align:center">
+                        Example
+                    </th>
+                    <th style="text-align:center">
+                        Number of Uploaded Images
+                    </th>
+                </tr>
+            </thead>
+            @foreach (var Pattern in GV.Patterns)
+            {
+                <tr>
+                    <th style="text-align:center">
+                        <button type="button" class="collapsible" style="text-align:center">@Pattern.PatternName</button>
+                        <div class="content">
+
+                            @foreach (var img in Pattern.FileNames)
+                            {
+                                //string FullPath = System.IO.Path.Combine(Styles.FilePath, img);
+                                <p style="text-align:center">@img</p>
+                            }
+                        </div>
+                    </th>
+                    <th style="text-align:center">
+                        @{
+                            string webRootPath = hostingEnvironment.WebRootPath;
+                            string Patterns = "Patterns";
+                            string Patterns_Path = System.IO.Path.Combine(webRootPath, Patterns);
+                            string CurrentPattern_Path = System.IO.Path.Combine(Patterns_Path, Pattern.PatternName);
+
+                            var Pattern_Images = Directory.EnumerateFiles(CurrentPattern_Path, "*.*", SearchOption.AllDirectories).Where(s => s.ToLower().EndsWith(".jpeg") ||
+                            s.ToLower().EndsWith(".jpg") || s.ToLower().EndsWith(".tif") || s.ToLower().EndsWith(".tiff") || s.ToLower().EndsWith(".png")
+                            || s.ToLower().EndsWith(".bmp"));
+                        }
+                        <div>
+                            <img id="myImg" src="@Url.Content("~/Patterns/" + Pattern.PatternName + "/" + System.IO.Path.GetFileName(Pattern_Images.ToList()[0]) + "?xxx=987878787")" class="img-thumbnail" style="max-width:50%;text-align:center" />
+                        </div>
+                    </th>
+                    <th style="text-align:center">
+                        @Html.DisplayFor(model => Pattern.NumberOfFiles)
+                    </th>
+                    <th style="text-align:center">
+                        <form method="post" asp-page-handler="DeletePN">
+                            <button class="btn btn-default" asp-page-handler="DeletePN">Delete</button>
+                            <input type="hidden" name="PN" value="@Pattern.PatternName" />
+                        </form>
+                    </th>
+                </tr>
+            }
+        </table>
+
+        <h3 style="text-align:center"><a asp-page="/Labelled/AddImgs_Labelled">Next: Adding Data Images</a> </h3>
+    }
+    else
+    {
+        <h5 style="color:crimson;text-align:center"> No Patterns added yet! </h5>
+    }
+
+}
+<hr />
+
+@section Scripts {
+    <script type="text/javascript" language="JavaScript">
+        function uploadFiles(inputId) {
+            var input = document.getElementById(inputId);
+            var files = input.files;
+            var formData = new FormData();
+
+            for (var i = 0; i != files.length; i++) {
+                formData.append("files", files[i]);
+            }
+
+            if (files.length > 0) {
+                $.ajax(
+                    {
+                        type: "POST",
+                        url: "/Patterns/AddPattern?handler=Upload",
+
+                        beforeSend: function (xhr) {
+                            $('#confirmationmsg').text(files.length + " files uploaded.");
+
+                            xhr.setRequestHeader("XSRF-TOKEN",
+                                $('input:hidden[name="__RequestVerificationToken"]').val());
+                        },
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function (data) {
+                            $('#confirmationmsg').text(files.length + " files uploaded");
+                        }
+                    }
+                );
+            }
+            else {
+                alert('Please select image(s)')
+            }
+        }
+    </script>
+}
+
+@if (Model.DuplicatedPN)
+{
+    <script>document.getElementById("confirmationmsg").innerText = "This pattern name has been already assigned for previously uploaded files.The currently uploaded files will be added to the same pattern."</script>
+}
+
+@if (Model.InvalidForm)
+{
+    <script>document.getElementById("confirmationmsg").innerText = "Please select file(s), then insert a valid pattern name and press the \"Assign\" button!"</script>
+}
+
+@*<h1 style="text-align:center"><a asp-page="/Unlabelled/Index">Back to the list of Unlabelled Handwriting Styles</a> </h1>*@
+
+<hr />
+<div style="border-style:solid; border-color:blue; border-width:medium; border-radius:10px; padding:3px">
+    <h3 style="text-align:center">Instructions:</h3>
+    <p style="text-align:center">
+        You can add patterns simply by uploading their images and assigning a unique name to be used in
+        the detection results. The procedure sequence is indicated by the numbers above each step.
+    </p>
+    <ol>
+        <li>
+            Click the "Upload" button to select the pattern images.
+        </li>
+        <li>
+            Give the selected pattern a unique name. You can do so by filling the related text box
+            and then clicking the "Assign" button.
+        </li>
+        <li>
+            If you did the previous steps correctly, you can add the pattern by clicking
+            the "Add" button. Otherwise, a message will show up to tell you what went wrong.
+        </li>
+        <li>
+            You can add more images to an existing pattern by assigning the name of that pattern to the 
+            uploaded images. The application will display a message telling you that this name already
+            exists.
+        </li>
+        <li>
+            You can delete any of the added patterns by clicking the "Delete" button.
+        </li>
+        <li>
+            After adding at least one pattern, you can move on to the next step.
+        </li>
+    </ol>
+</div>

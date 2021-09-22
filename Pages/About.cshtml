@@ -1,0 +1,87 @@
+﻿@page
+@model VPD1p3.Pages.AboutModel
+@{
+    ViewData["Title"] = "About Visual-Pattern Detector v1.3 (VPD1.3)";
+}
+
+<h3 style="text-align:center; font:bold">@ViewData["Title"]</h3>
+<p>
+    This software tool has been developed by <a href="https://www.csmc.uni-hamburg.de/about/people/mohammed.html" target="_blank"> Dr. Hussein Mohammed</a>
+    as a part of sub-project RFA05: <a href="https://www.csmc.uni-hamburg.de/written-artefacts/research/field-a/rfa05.html" target="_blank">
+        Pattern Recognition in 2D Data from Digitised Images and Advanced Aquisition Techniques
+    </a>.
+</p>
+
+<h3 style="text-align:center; font-style:italic; font-size:medium" class="collapsible">Acknowledgement</h3>
+<div class="content_visible">
+    <p>
+        The development of this software was sponsored by the Cluster of Excellence 2176 ‘Understanding Written Artefacts’, generously
+        funded by the German Research Foundation (DFG), within the scope of the work conducted at Centre for the Study of Manuscript Cultures (CSMC).
+    </p>
+    <p>
+        I would like to thank the following colleagues for testing this software tool and validating the results:
+        <a href="https://www.csmc.uni-hamburg.de/about/people/ciotti.html" target="_blank"> Dr. Giovanni Ciotti </a> (CSMC),
+        <a href="https://www.tu-braunschweig.de/en/ifn/institute/team/sv/maergner/" target="_blank"> Dr. Volker Märgner </a> (Technische Universität Braunschweig),
+        <a href="https://www.csmc.uni-hamburg.de/about/people/helmanwazny.html" target="_blank"> Dr. Agnieszka Helman-Wazny </a> (CSMC),
+        <a href="https://altegeschichte.philhist.unibas.ch/de/personen/isabelle-marthot-santaniello/" target="_blank"> Dr. Isabelle Marthot-Santaniello </a> (Universität Basel).
+    </p>
+</div>
+
+<h3 style="text-align:center; font-style:italic; font-size:medium" class="collapsible">Main Usage</h3>
+<p class="content">
+    The main goal of this software tool is to automatically recognise and allocate visual patterns (such as words, drawings and seals) in digitised manuscripts. The recall-precision
+    balance of detected patterns can be controlled visually, and the detected patterns can be saved as annotations on the original images or as cropped images depending on the needs of users. 
+</p>
+
+<h3 style="text-align:center; font-style:italic; font-size:medium" class="collapsible">Limitations of This Version</h3>
+<div class="content">
+    <p>
+        Please pay attention to the following limitations:
+    </p>
+    <ul>
+        <li>
+            The required computational resources depend on your data. Detecting several patterns concurrently can exhaust your computer memory, and searching
+            in huge datasets is limited by your storage capacity and your browser upload settings.
+        </li>
+
+        <li>
+            This version provides best results of pattern detection when applied to datasets with relatively similar image qualities, such as resolution, degradation level, rotation, etc. an examples of
+            such datasets are manuscripts that have been digitised under similar conditions and using similar equipements. Future releases will provide higher tolerance levels with respect to these
+            aspects.
+        </li>
+
+        <li>
+            This version has a limited capacity of benefiting from a large number of examples for the same pattern. Future releases will generate pattern models adaptively so that it gets better
+            with every additional pattern example.
+        </li>
+    </ul>
+</div>
+
+<h3 style="text-align:center; font-style:italic; font-size:medium" class="collapsible">References</h3>
+<div class="content">
+    <p>
+        This software tool is based on the method presented in this publication: <br />
+        <a href="https://doi.org/10.1007/s10032-021-00371-7" target="_blank">
+            Mohammed, H., Märgner, V., & Ciotti, G. (2021). Learning-free pattern detection for manuscript research.
+            International Journal on Document Analysis and Recognition (IJDAR), 1-13.
+        </a>
+    </p>
+</div>
+
+<h3 style="position:center; font:bold">Copyrights Notice:</h3>
+<div class="row">
+    <div class="col-12 my-auto">
+        <p>
+            Proper citation of this software is required when it is used to support your research in anyway.
+
+            This software tool is licensed under the <a href="https://creativecommons.org/licenses/by-nc/4.0/legalcode" target="_blank">Creative Commons Attribution-NonCommercial 4.0 International Public License</a>
+        </p>
+    </div>
+</div>
+<div class="row">
+    <div class="col-12 my-auto" style="text-align:center">
+        <img src=@Url.Content("~/images/Copyrights.png?xxx=987878787") class="img-responsive" style="width:50%" />
+    </div>
+</div>
+
+
